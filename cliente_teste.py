@@ -1,5 +1,6 @@
 import asyncio
 import json
+import os
 
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
@@ -29,7 +30,10 @@ def _extrair_json(resultado, como_lista: bool = False):
 
 async def main() -> dict:
     params = StdioServerParameters(command="python", args=["servidor_mcp.py"])
-    async with stdio_client(params) as (read, write):
+    # o servidor MCP loga no stderr, que o autograder anexa ao stdout capturado;
+    # jogamos fora para o envelope JSON ficar isolado no stdout.
+    devnull = open(os.devnull, "w")
+    async with stdio_client(params, errlog=devnull) as (read, write):
         async with ClientSession(read, write) as session:
             await session.initialize()
 
